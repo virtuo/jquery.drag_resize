@@ -33,9 +33,11 @@
       m_pagex,
       m_pagey,
       m_drag,
+      m_change, // set to false if one object position or size is changed
 
 
   dragresize = function(event){
+    m_change = true;
     if (m_drag) {
       m_current_element.css({
         left: m_left + event.pageX - m_pagex,
@@ -50,13 +52,6 @@
     }
   },
 
-  stop = function(element, callback){
-    m_current_element.css("opacity", m_opacity);
-    $(window).unbind('mousemove', dragresize).unbind('mouseup', stop);
-    callback && callback(element);
-  },
-
-  
   activate_dragresize = function(element, handle, drag, callback) {
     /*
      * Arguments:
@@ -78,9 +73,12 @@
       m_opacity = element.css("opacity");
 
       element.css("opacity", 0.8);
-      $(window).mousemove(dragresize).mouseup(function() {
-        stop(element, callback);
-      });
+      $(window).mousemove(dragresize).mouseup((function stop() {
+        m_current_element.css("opacity", m_opacity);
+        $(window).unbind('mousemove', dragresize).unbind('mouseup', stop);
+        callback && m_change && callback(element);
+        m_change = false;
+      }));
       return false;
     });
     return element;
